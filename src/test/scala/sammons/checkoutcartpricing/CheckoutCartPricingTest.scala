@@ -30,22 +30,22 @@ class CheckoutCartPricingTest extends Specification with Mockito {
   "calculateCheckoutCartPrice" should {
 
     "throw EmptyCatalogException when the catalog is empty" in new Setup {
-      CheckoutCartPricingImpl.initializeCheckoutCartPriceCalculationSystem(Seq(), Seq())
+      CheckoutCartPricingApi.initializeCheckoutCartPriceCalculationSystem(Seq(), Seq())
 
-      CheckoutCartPricingImpl.calculateCheckoutCartPrice(emptyCart) must throwA(EmptyCatalogException())
+      CheckoutCartPricingApi.calculateCheckoutCartPrice(emptyCart) must throwA(EmptyCatalogException())
     }
 
     "return the full cost when no bundles are used in initialization" in new Setup {
-      CheckoutCartPricingImpl.initializeCheckoutCartPriceCalculationSystem(testCatalog, Seq())
+      CheckoutCartPricingApi.initializeCheckoutCartPriceCalculationSystem(testCatalog, Seq())
 
-      CheckoutCartPricingImpl.calculateCheckoutCartPrice(snickerCart) must_=== 2000.00
+      CheckoutCartPricingApi.calculateCheckoutCartPrice(snickerCart) must_=== 2000.00
     }
 
     "return the full cost when no bundles apply" in new Setup {
       mockBundle.itemsDoQualifyForBundle(snickerCart) returns false
-      CheckoutCartPricingImpl.initializeCheckoutCartPriceCalculationSystem(testCatalog, testBundles)
+      CheckoutCartPricingApi.initializeCheckoutCartPriceCalculationSystem(testCatalog, testBundles)
 
-      CheckoutCartPricingImpl.calculateCheckoutCartPrice(snickerCart) must_=== 2000.00
+      CheckoutCartPricingApi.calculateCheckoutCartPrice(snickerCart) must_=== 2000.00
 
       there was one (mockBundle).itemsDoQualifyForBundle(snickerCart)
       there was no (mockBundle).calculateSavings(snickerCart)
@@ -53,9 +53,9 @@ class CheckoutCartPricingTest extends Specification with Mockito {
 
     "return the reduced cost when bundles apply" in new Setup {
       mockBundle.calculateSavings(snickerCart) returns 1500
-      CheckoutCartPricingImpl.initializeCheckoutCartPriceCalculationSystem(testCatalog, testBundles)
+      CheckoutCartPricingApi.initializeCheckoutCartPriceCalculationSystem(testCatalog, testBundles)
 
-      CheckoutCartPricingImpl.calculateCheckoutCartPrice(snickerCart) must_=== 500.00
+      CheckoutCartPricingApi.calculateCheckoutCartPrice(snickerCart) must_=== 500.00
 
       there was one (mockBundle).itemsDoQualifyForBundle(snickerCart)
       there was one (mockBundle).calculateSavings(snickerCart)
@@ -63,9 +63,9 @@ class CheckoutCartPricingTest extends Specification with Mockito {
 
     "return zero when savings would take the price negative" in new Setup {
       mockBundle.calculateSavings(snickerCart) returns 10000
-      CheckoutCartPricingImpl.initializeCheckoutCartPriceCalculationSystem(testCatalog, testBundles)
+      CheckoutCartPricingApi.initializeCheckoutCartPriceCalculationSystem(testCatalog, testBundles)
 
-      CheckoutCartPricingImpl.calculateCheckoutCartPrice(snickerCart) must_=== 0
+      CheckoutCartPricingApi.calculateCheckoutCartPrice(snickerCart) must_=== 0
 
       there was one (mockBundle).calculateSavings(snickerCart)
     }

@@ -20,7 +20,7 @@ trait CheckoutCartPricing {
   def initializeCheckoutCartPriceCalculationSystem(catalogItems: Seq[CatalogItem], bundles: Seq[Bundle]): Unit
 }
 
-object CheckoutCartPricingImpl extends CheckoutCartPricing {
+object CheckoutCartPricingApi extends CheckoutCartPricing {
 
   private var catalogItems: Seq[CatalogItem] = Seq()
   private var bundles: Seq[Bundle] = Seq()
