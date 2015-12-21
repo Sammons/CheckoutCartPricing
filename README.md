@@ -4,9 +4,11 @@ This is a toy scala library that calculates the minimum cost, given a shopping c
 
 There are CatalogItems, Bundles, and a CheckoutCartPricingImpl object that exposes the logic through two endpoints:
 
-1. def calculateCheckoutCartPrice(checkoutCart: Cart): BigDecimal
+1. `def calculateCheckoutCartPrice(checkoutCart: Cart): BigDecimal`
 
-2. def initializeCheckoutCartPriceCalculationSystem(catalogItems: Seq[CatalogItem], bundles: Seq[Bundle]): Unit
+2. `def initializeCheckoutCartPriceCalculationSystem(catalogItems: Seq[CatalogItem], bundles: Seq[Bundle]): Unit`
+
+* A `Cart` is a `Map[CatalogItem, Int]` and a `CatalogItem` is a `case class CatalogItem(id: String, name: String, value: BigDecimal)`
 
 ## Caveats / Notes
 
