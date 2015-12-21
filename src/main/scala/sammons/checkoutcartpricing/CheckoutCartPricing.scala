@@ -1,6 +1,7 @@
 package sammons.checkoutcartpricing
 
 import sammons.checkoutcartpricing.CheckoutCartPricingExceptions.EmptyCatalogException
+import sammons.checkoutcartpricing.CheckoutCartPricingTypes.Cart
 
 trait CheckoutCartPricing {
   /* Takes a map of catalog item ID -> Count of items in the user's cart. Returns a bigdecimal result
@@ -12,7 +13,7 @@ trait CheckoutCartPricing {
    * Note about currencies: logic handling the catalogItems and bundles assumes the currency is the same between
    * initialization and this method; there are no constructs to manage what currency is being used, and no currency
    * conversions will be performed.*/
-  def calculateCheckoutCartPrice(checkoutCart: Map[CatalogItem, Int]): BigDecimal
+  def calculateCheckoutCartPrice(checkoutCart: Cart): BigDecimal
 
   /* Updates the catalog and bundles available. Calling this method again will overwrite the
    * existing values. This operation should be threadsafe; it synchronizes on the CheckoutCartPricing object.
@@ -30,7 +31,7 @@ object CheckoutCartPricingImpl extends CheckoutCartPricing {
     this.bundles = bundles
   }
 
-  def calculateCheckoutCartPrice(checkoutCart: Map[CatalogItem, Int]): BigDecimal = {
+  def calculateCheckoutCartPrice(checkoutCart: Cart): BigDecimal = {
     if (catalogItems.isEmpty) throw EmptyCatalogException()
     val savings: BigDecimal =
       bundles.filter(b => b.itemsDoQualifyForBundle(checkoutCart)).map(_.calculateSavings(checkoutCart)).sum
