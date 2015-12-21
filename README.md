@@ -24,7 +24,9 @@ from the command line run `sbt test`
 
 ## Pulling into another project
 
-here is a demo build.scala that can automatically clone down this code into a project alongside another. The library has not been published to any public repositories.
+* There is a sample project at https://github.com/sammons/CheckoutCartPricing-Example.
+
+here is a demo build.scala that can automatically clone down this code into a project alongside another. The library has not been published to any public repositories. 
 
 ```
 import sbt._
