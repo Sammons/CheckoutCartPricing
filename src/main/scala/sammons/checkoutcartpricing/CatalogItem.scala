@@ -1,8 +1,5 @@
 package sammons.checkoutcartpricing
 
-import java.math.BigDecimal
+import scala.math.BigDecimal
 
-trait CatalogItem {
-  def name: String
-  def value: BigDecimal
-}
+case class CatalogItem(id: String, name: String, value: BigDecimal)
