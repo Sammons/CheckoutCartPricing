@@ -2,11 +2,9 @@
 
 This is a toy scala library that calculates the minimum cost, given a shopping cart, a catalog, and a set of bundles available.
 
-There are CatalogItems, Bundles, and a CheckoutCartPricingImpl object that exposes the logic through two endpoints:
+There are CatalogItems, Bundles, and a CheckoutCartPricing class that exposes the pricing logic through the endpoint:
 
 1. `def calculateCheckoutCartPrice(checkoutCart: Cart): BigDecimal`
-
-2. `def initializeCheckoutCartPriceCalculationSystem(catalogItems: Seq[CatalogItem], bundles: Seq[Bundle]): Unit`
 
 * A `Cart` is a `Map[CatalogItem, Int]` and a `CatalogItem` is a `case class CatalogItem(id: String, name: String, value: BigDecimal)`
 
@@ -14,9 +12,7 @@ There are CatalogItems, Bundles, and a CheckoutCartPricingImpl object that expos
 
 * currency is not managed explicitly, everything is assumed to be the same currency and BigDecimal is used.
 
-* bundles stack. They do not exclude eachother
-
-* the initialization of the catalog and bundles should be safe, but no testing around the threadsafeness has been implemented.
+* bundles stack. They do not exclude eachother e.g. a buy 1 get 1 free deal may be applied to a cart of 4 apples twice, but those 4 apples would not then be able to participate in a different deal.
 
 ## Testing
 
