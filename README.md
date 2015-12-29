@@ -12,7 +12,7 @@ There are CatalogItems, Bundles, and a CheckoutCartPricing class that exposes th
 
 * currency is not managed explicitly, everything is assumed to be the same currency and BigDecimal is used.
 
-* bundles stack. They do not exclude eachother e.g. a buy 1 get 1 free deal may be applied to a cart of 4 apples twice, but those 4 apples would not then be able to participate in a different deal.
+* bundles do not stack. Multiple bundles may be applied, but not using the same items e.g. a buy 1 get 1 free deal may be applied to a cart of 4 apples twice, but those 4 apples would not then be able to participate in a different deal.
 
 ## Testing
 
