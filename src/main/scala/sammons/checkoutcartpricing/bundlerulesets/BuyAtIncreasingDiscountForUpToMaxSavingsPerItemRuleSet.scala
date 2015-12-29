@@ -5,7 +5,7 @@ import sammons.checkoutcartpricing.{CatalogItem, CheckoutBundle}
 
 import scala.annotation.tailrec
 
-/* like saying you save 1 cent more on every apple, for every extra apple purchased, up to a max of 5 cents per apple */
+/* e.g. saying you save 1 cent more on every apple, for every extra apple purchased, up to a max of 5 cents per apple */
 class BuyAtIncreasingDiscountForUpToMaxSavingsPerItemRuleSet(ruleSetId: String, item: CatalogItem, discountMultiplier: BigDecimal, maxSavingsPerItem: BigDecimal) extends BundleRuleSet {
   val id = ruleSetId
 

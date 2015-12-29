@@ -1,47 +1,69 @@
 package sammons.checkoutcartpricing
 
-import sammons.checkoutcartpricing.CheckoutCartPricingExceptions.EmptyCatalogException
+import sammons.checkoutcartpricing.CheckoutCartPricingExceptions.{ItemsDoNotExistInCatalog, EmptyCatalogException}
 import sammons.checkoutcartpricing.bundlerulesets.BundleRuleSet
 
+import scala.collection.mutable
 
-object CheckoutCartPricing {
+
+class CheckoutCartPricing(catalogItems: Seq[CatalogItem], possibleBundles: Seq[BundleRuleSet]) {
   import CartType._
 
-  private var catalogItems: Seq[CatalogItem] = Seq()
-  private var possibleBundles: Seq[BundleRuleSet] = Seq()
-
-  def initializeCheckoutCartPriceCalculationSystem(catalogItems: Seq[CatalogItem], possibleBundles: Seq[BundleRuleSet]): Unit = this.synchronized {
-    this.catalogItems = catalogItems
-    this.possibleBundles = possibleBundles
-  }
-
+  /* Given a cart (Map[CatalogItem, Int]) calculates a CheckoutCart, which contains
+   * the lowest total possible, and a sequence of the best bundles to use.
+   */
   def calculateCheapestCheckoutCart(cart: Cart): CheckoutCart = {
     if (catalogItems.isEmpty)
       throw EmptyCatalogException()
 
-    val catalogAsSet = this.catalogItems.toSet
+    val catalogAsSet = catalogItems.toSet
+    val itemsNotInCatalog = cart.keys.filter(!catalogAsSet(_))
+    if (itemsNotInCatalog.nonEmpty)
+      throw ItemsDoNotExistInCatalog(itemsNotInCatalog.toSeq)
+    
+    val bundleCombinations = mutable.Map[Cart, Seq[CheckoutBundle]]()
 
-    if (cart.keys.exists(item => !catalogAsSet(item)))
-      throw new IllegalArgumentException("Item in cart does not exist in the catalog")
+    observeBundleCombinations(allEligibleBundlesFor(cart), cart, Map(), Seq(), bundleCombinations)
+    val bundlesGroupedBySum = bundleCombinations.values.groupBy(b => b.map(_.savings).sum)
+    val bestSavingsWithFewestBundles = bundlesGroupedBySum(bundlesGroupedBySum.keys.max).minBy(_.size)
+    val netPrice = cart.price - bestSavingsWithFewestBundles.map(_.savings).sum
 
-    /* for each bundle potential, try every other bundle potential minus the current cart */
-    val bestBundles = calculateBestBundles(cart, cart, calculateAllPossibleBundles(cart))
-    val netPrice = cart.price - bestBundles.map(_.savings).sum
-
-    CheckoutCart(cart, bestBundles, if (netPrice >= 0) netPrice else 0)
+    CheckoutCart(cart, bestSavingsWithFewestBundles, if (netPrice >= 0) netPrice else 0)
   }
 
-  private def calculateBestBundles(originalCart: Cart, cart: Cart, possibleBundles: Seq[CheckoutBundle], bundlesSoFar: Seq[CheckoutBundle] = Seq()): Seq[CheckoutBundle] = {
-    val possibleBundleCombinations = possibleBundles
-      .filter(_.itemsInBundle belongTo cart)
-      .map({ bundle =>
-        val cartWithoutChosenBundle = CartType.subtractCarts(cart, bundle.itemsInBundle)
-        calculateBestBundles(originalCart, cartWithoutChosenBundle, possibleBundles, bundlesSoFar ++ Seq(bundle))
-      })
-    possibleBundleCombinations.maxBy(_.map(_.savings).sum)
+  /* combines every combination of eligible bundles with the others, whenever a set of
+   * bundles creates a cart that overlaps with another set of bundles, only the better-saving-seq of bundles
+   * is used to proceed */
+  private def observeBundleCombinations(allPossibleBundles: Seq[CheckoutBundle],
+                                    previousCart: Cart,
+                                    cartConstructSoFar: Cart,
+                                    bundleSeqConstructSoFar: Seq[CheckoutBundle],
+                                    observedCarts: mutable.Map[Cart, Seq[CheckoutBundle]]): Unit = {
+    if (allPossibleBundles.nonEmpty && previousCart.nonEmpty) {
+      /* while there are bundles to try */
+      allPossibleBundles.foreach { bundle =>
+        /* make new constructs, building off of the existing values */
+        val currentBundleCartConstruct = cartConstructSoFar plus bundle.itemsInBundle
+        val currentBundleSeq = bundleSeqConstructSoFar ++ Seq(bundle)
+        val previouslyObservedBundleSeq = observedCarts.getOrElse(currentBundleCartConstruct, Seq())
+        val previouslyObservedSavings = previouslyObservedBundleSeq.map(_.savings).sum
+        val currentSavings = currentBundleSeq.map(_.savings).sum
+        /* if better savings have been observed with this cart then halt, otherwise
+         * continue by removing items in bundle from the previousCart,
+         * updating the cache, and then recursing. prioritize smaller bundle sequences.
+         */
+        if (currentSavings > previouslyObservedSavings ||
+          (currentSavings == previouslyObservedSavings && previouslyObservedBundleSeq.size > currentBundleSeq.size)) {
+          observedCarts(currentBundleCartConstruct) = currentBundleSeq
+          val currentCart = previousCart minus bundle.itemsInBundle
+          val bundlesThatWorkWithCurrentCart = allPossibleBundles.filter(_.itemsInBundle belongTo currentCart)
+          observeBundleCombinations(bundlesThatWorkWithCurrentCart, currentCart, currentBundleCartConstruct, currentBundleSeq, observedCarts)
+        }
+      }
+    }
   }
 
-  private def calculateAllPossibleBundles(cart: Cart): Seq[CheckoutBundle] = {
+  private def allEligibleBundlesFor(cart: Cart): Seq[CheckoutBundle] = {
     this.possibleBundles.flatMap(_.calculatePossibleBundles(cart))
   }
 }
